@@ -1,0 +1,1169 @@
+{
+  "project": "Big Trout Fish",
+  "lastScanned": null,
+  "phases": [
+    {
+      "id": "1",
+      "name": "MVP (1-2 Weeks)",
+      "epics": [
+        {
+          "id": "1.1",
+          "name": "Project Setup & Scaffolding",
+          "tasks": [
+            {
+              "id": "1.1.1",
+              "title": "Initialize Next.js project with TypeScript and App Router",
+              "description": "Run create-next-app with TypeScript, ESLint, Tailwind CSS, App Router. Configure tsconfig strict mode.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": [],
+              "detect": [
+                { "type": "file_exists", "paths": ["package.json", "tsconfig.json", "next.config.js"] },
+                { "type": "package_installed", "packages": ["next", "react", "typescript"] }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.1.2",
+              "title": "Install and configure Tailwind CSS v4",
+              "description": "Install Tailwind CSS, configure for src/ directory, set up global styles with river/aquatic color palette.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.1.1"],
+              "detect": [
+                { "type": "package_installed", "packages": ["tailwindcss"] },
+                { "type": "file_exists", "paths": ["tailwind.config.ts"] }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.1.3",
+              "title": "Install PixiJS v8 and verify WebGL rendering",
+              "description": "Install pixi.js v8. Create a minimal test: mount a PixiJS Application to a canvas element and render a colored rectangle to confirm WebGL works.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.1.1"],
+              "detect": [
+                { "type": "package_installed", "packages": ["pixi.js"] }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.1.4",
+              "title": "Install Solana wallet adapter packages",
+              "description": "Install @solana/web3.js, @solana/wallet-adapter-base, @solana/wallet-adapter-react, @solana/wallet-adapter-phantom, tweetnacl.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.1.1"],
+              "detect": [
+                { "type": "package_installed", "packages": ["@solana/web3.js", "@solana/wallet-adapter-react", "tweetnacl"] }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.1.5",
+              "title": "Install database and cache dependencies",
+              "description": "Install drizzle-orm, drizzle-kit, @neondatabase/serverless, @upstash/redis, jose.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.1.1"],
+              "detect": [
+                { "type": "package_installed", "packages": ["drizzle-orm", "@upstash/redis", "@neondatabase/serverless", "jose"] }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.1.6",
+              "title": "Install utility dependencies",
+              "description": "Install zustand, swr, bad-words.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.1.1"],
+              "detect": [
+                { "type": "package_installed", "packages": ["zustand", "swr", "bad-words"] }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.1.7",
+              "title": "Set up project directory structure",
+              "description": "Create the folder hierarchy: src/app, src/components/canvas, src/components/overlay, src/lib/solana, src/lib/db, src/lib/trout, src/hooks, src/workers, src/types, public/assets/sprites, public/assets/background, public/assets/ui, scripts.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.1.1"],
+              "detect": [
+                { "type": "dir_not_empty", "path": "src/app" },
+                { "type": "dir_not_empty", "path": "src/lib" },
+                { "type": "dir_not_empty", "path": "src/components" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.1.8",
+              "title": "Create .env.example with all required variables",
+              "description": "Create .env.example with SOLANA_RPC_URL, TOKEN_MINT_ADDRESS, HELIUS_API_KEY, DATABASE_URL, REDIS_URL, NEXT_PUBLIC_APP_URL, CRON_SECRET, JWT_SECRET.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.1.1"],
+              "detect": [
+                { "type": "file_exists", "paths": [".env.example"] },
+                { "type": "file_contains", "path": ".env.example", "pattern": "DATABASE_URL" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.1.9",
+              "title": "Create TypeScript type definitions",
+              "description": "Define core types in src/types/index.ts: TroutData, TroutTier, TroutSimState, CameraState, AABB, VisibleTrout, DeviceCapabilities, TierThresholds, and all API request/response types.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.1.1"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/types/index.ts"] },
+                { "type": "file_contains", "path": "src/types/index.ts", "pattern": "TroutData" },
+                { "type": "lines_gt", "path": "src/types/index.ts", "min": 30 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.1.10",
+              "title": "Set up Zustand store",
+              "description": "Create the main Zustand store with TroutStore interface: troutMap, camera state, UI state (selectedTrout, hoveredTrout, searchQuery), wallet state, and quality setting.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.1.6", "1.1.9"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/lib/store.ts"] },
+                { "type": "file_contains", "path": "src/lib/store.ts", "pattern": "zustand" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            }
+          ]
+        },
+        {
+          "id": "1.2",
+          "name": "Database & Cache Layer",
+          "tasks": [
+            {
+              "id": "1.2.1",
+              "title": "Define Drizzle ORM schema for holders table",
+              "description": "Create src/lib/db/schema.ts with holders table: address (VARCHAR 44 PK), balance (BIGINT), first_seen (TIMESTAMP), last_updated (TIMESTAMP). Add indexes on balance and first_seen.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.1.5"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/lib/db/schema.ts"] },
+                { "type": "file_contains", "path": "src/lib/db/schema.ts", "pattern": "holders" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.2.2",
+              "title": "Define Drizzle ORM schema for custom_names table",
+              "description": "Add custom_names table to schema: address (FK to holders), display_name (VARCHAR 20 UNIQUE), verified_at, updated_at. Add case-insensitive unique index on display_name.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.2.1"],
+              "detect": [
+                { "type": "file_contains", "path": "src/lib/db/schema.ts", "pattern": "customNames" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.2.3",
+              "title": "Set up PostgreSQL client (Neon serverless driver)",
+              "description": "Create src/lib/db/postgres.ts with Neon serverless connection using DATABASE_URL. Export a drizzle instance configured with the schema.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.2.1"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/lib/db/postgres.ts"] },
+                { "type": "file_contains", "path": "src/lib/db/postgres.ts", "pattern": "neon" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.2.4",
+              "title": "Set up Redis client (Upstash)",
+              "description": "Create src/lib/db/redis.ts with Upstash Redis REST client using REDIS_URL. Export singleton instance.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.1.5"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/lib/db/redis.ts"] },
+                { "type": "file_contains", "path": "src/lib/db/redis.ts", "pattern": "upstash" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.2.5",
+              "title": "Generate and run initial database migration",
+              "description": "Configure drizzle.config.ts, run drizzle-kit generate to create migration SQL, verify migration files are correct.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.2.2"],
+              "detect": [
+                { "type": "file_exists", "paths": ["drizzle.config.ts"] },
+                { "type": "dir_not_empty", "path": "drizzle" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.2.6",
+              "title": "Implement Redis cache population function",
+              "description": "Create function populateCache() in src/lib/db/redis.ts that takes holder rows + name rows, computes scores/tiers/ranks, builds Redis pipeline to populate trout:all sorted set and trout:data:{address} hashes with 12-min TTL.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.2.4", "1.3.1"],
+              "detect": [
+                { "type": "file_contains", "path": "src/lib/db/redis.ts", "pattern": "populateCache" },
+                { "type": "lines_gt", "path": "src/lib/db/redis.ts", "min": 50 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            }
+          ]
+        },
+        {
+          "id": "1.3",
+          "name": "Trout Sizing & Data Logic",
+          "tasks": [
+            {
+              "id": "1.3.1",
+              "title": "Implement trout score formula: sqrt(tokens) x sqrt(days)",
+              "description": "Create src/lib/trout/sizing.ts with computeTroutScore(tokensHeld, daysHeld). Handle token decimal adjustment. Return raw score number.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.1.9"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/lib/trout/sizing.ts"] },
+                { "type": "file_contains", "path": "src/lib/trout/sizing.ts", "pattern": "computeTroutScore" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.3.2",
+              "title": "Implement percentile-based tier assignment",
+              "description": "Add computeThresholds() and assignTier() to sizing.ts. Thresholds at p20/p50/p80/p95/p99 map to tiers 1-6. Add computeVisualScale() for within-tier variation.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.3.1"],
+              "detect": [
+                { "type": "file_contains", "path": "src/lib/trout/sizing.ts", "pattern": "assignTier" },
+                { "type": "file_contains", "path": "src/lib/trout/sizing.ts", "pattern": "computeThresholds" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.3.3",
+              "title": "Implement name validation and profanity filter",
+              "description": "Create src/lib/trout/naming.ts with validateDisplayName(). Enforce: 1-20 chars, /^[a-zA-Z0-9_\\-\\.]+$/, profanity filter via bad-words library. Export isNameAvailable() for uniqueness checks.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.1.6"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/lib/trout/naming.ts"] },
+                { "type": "file_contains", "path": "src/lib/trout/naming.ts", "pattern": "validateDisplayName" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.3.4",
+              "title": "Implement deterministic position seeding from wallet address",
+              "description": "Add seedFromAddress() and computeStablePosition() to sizing.ts or a new positions.ts. Hash wallet address to deterministic x,y within world bounds. Use LCG for second coordinate.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.3.1"],
+              "detect": [
+                { "type": "file_contains", "path": "src/lib/trout/sizing.ts", "pattern": "seedFromAddress" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            }
+          ]
+        },
+        {
+          "id": "1.4",
+          "name": "Solana Data Fetching & Cron",
+          "tasks": [
+            {
+              "id": "1.4.1",
+              "title": "Implement Helius DAS API holder fetching",
+              "description": "Create src/lib/solana/holders.ts with fetchAllHolders(). Paginate through getTokenAccounts, aggregate by owner wallet. Return Map<address, balance>.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.1.4"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/lib/solana/holders.ts"] },
+                { "type": "file_contains", "path": "src/lib/solana/holders.ts", "pattern": "fetchAllHolders" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.4.2",
+              "title": "Implement cron sync endpoint",
+              "description": "Create src/app/api/cron/sync-holders/route.ts. Protected by CRON_SECRET. Acquires Redis lock, fetches holders from Helius, diffs against PostgreSQL, applies inserts/updates/deletes in batches, repopulates Redis cache, releases lock.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.4.1", "1.2.6"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/app/api/cron/sync-holders/route.ts"] },
+                { "type": "file_contains", "path": "src/app/api/cron/sync-holders/route.ts", "pattern": "CRON_SECRET" },
+                { "type": "lines_gt", "path": "src/app/api/cron/sync-holders/route.ts", "min": 50 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.4.3",
+              "title": "Configure Vercel cron schedule in vercel.json",
+              "description": "Create/update vercel.json with crons config pointing to /api/cron/sync-holders every 10 minutes. Add Cache-Control headers for /api/trouts and /api/stats.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.4.2"],
+              "detect": [
+                { "type": "file_exists", "paths": ["vercel.json"] },
+                { "type": "config_key", "path": "vercel.json", "key": "crons" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.4.4",
+              "title": "Implement Solana RPC client for verification",
+              "description": "Create src/lib/solana/client.ts with connection to SOLANA_RPC_URL. Minimal client — only used for individual wallet lookups during verification.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.1.4"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/lib/solana/client.ts"] },
+                { "type": "file_contains", "path": "src/lib/solana/client.ts", "pattern": "Connection" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            }
+          ]
+        },
+        {
+          "id": "1.5",
+          "name": "API Routes",
+          "tasks": [
+            {
+              "id": "1.5.1",
+              "title": "Implement GET /api/trouts endpoint",
+              "description": "Create Edge Runtime route. Supports ?bbox= for viewport queries and ?limit=&cursor= for pagination. Reads from Redis. Returns trout array with address, displayName, balance, daysHeld, score, tier, rank, x, y. Cache-Control: s-maxage=60.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.2.6"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/app/api/trouts/route.ts"] },
+                { "type": "lines_gt", "path": "src/app/api/trouts/route.ts", "min": 30 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.5.2",
+              "title": "Implement GET /api/trouts/[address] endpoint",
+              "description": "Create Edge Runtime dynamic route. Fetch single trout from Redis hash. Return 404 if not found.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.5.1"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/app/api/trouts/[address]/route.ts"] }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.5.3",
+              "title": "Implement POST /api/verify endpoint",
+              "description": "Serverless Node.js route. Accepts { address, message, signature }. Verifies Ed25519 signature via tweetnacl. Checks timestamp within 5 min. Confirms address is in holders table. Issues JWT (24h, HS256) with address as subject.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.4.4", "1.2.3"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/app/api/verify/route.ts"] },
+                { "type": "file_contains", "path": "src/app/api/verify/route.ts", "pattern": "nacl" },
+                { "type": "lines_gt", "path": "src/app/api/verify/route.ts", "min": 40 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.5.4",
+              "title": "Implement POST /api/name endpoint",
+              "description": "Serverless route. Requires Bearer JWT. Validates name (regex, length, profanity). Checks uniqueness in Redis then PostgreSQL. Upserts custom_names row. Invalidates Redis cache for address. Returns updated name.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.5.3", "1.3.3"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/app/api/name/route.ts"] },
+                { "type": "file_contains", "path": "src/app/api/name/route.ts", "pattern": "validateDisplayName" },
+                { "type": "lines_gt", "path": "src/app/api/name/route.ts", "min": 40 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.5.5",
+              "title": "Implement GET /api/stats endpoint",
+              "description": "Edge Runtime route. Returns totalHolders, totalSupplyHeld, avgDaysHeld, largestTrout, oldestTrout, lastUpdated. Read from Redis trout:stats key. Cache-Control: s-maxage=120.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.2.6"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/app/api/stats/route.ts"] }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.5.6",
+              "title": "Implement GET /api/leaderboard endpoint",
+              "description": "Edge Runtime route. Supports ?page=&limit=&search= params. Uses Redis sorted set ZREVRANGE for pagination. Search falls back to PostgreSQL ILIKE query. Returns ranked entries array + pagination metadata.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.2.6"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/app/api/leaderboard/route.ts"] },
+                { "type": "lines_gt", "path": "src/app/api/leaderboard/route.ts", "min": 30 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            }
+          ]
+        },
+        {
+          "id": "1.6",
+          "name": "Rendering Engine (PixiJS)",
+          "tasks": [
+            {
+              "id": "1.6.1",
+              "title": "Create main PixiJS application component (TroutScene)",
+              "description": "Create src/components/canvas/TroutScene.tsx. Initialize PIXI.Application with fullscreen, no antialias (pixel art), high-performance GPU preference. Mount canvas as page background. Handle resize events.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.1.3"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/components/canvas/TroutScene.tsx"] },
+                { "type": "file_contains", "path": "src/components/canvas/TroutScene.tsx", "pattern": "PIXI.Application" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.6.2",
+              "title": "Set up display layer hierarchy",
+              "description": "In TroutScene, create ordered containers: backgroundLayer (z=0), troutLayer (z=1) with smallTroutBatch (ParticleContainer) and largeTroutGroup (Container), effectsLayer (z=2), labelLayer (z=3).",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.6.1"],
+              "detect": [
+                { "type": "file_contains", "path": "src/components/canvas/TroutScene.tsx", "pattern": "backgroundLayer" },
+                { "type": "file_contains", "path": "src/components/canvas/TroutScene.tsx", "pattern": "troutLayer" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.6.3",
+              "title": "Create placeholder pixel-art sprite sheet",
+              "description": "Create scripts/generate-placeholders.ts that generates a simple sprite sheet with colored rectangles for each of the 6 tiers. Output to public/assets/sprites/trout-atlas.png + trout-atlas.json.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.1.1"],
+              "detect": [
+                { "type": "file_exists", "paths": ["public/assets/sprites/trout-atlas.json"] },
+                { "type": "file_exists", "paths": ["public/assets/sprites/trout-atlas.png"] }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.6.4",
+              "title": "Implement SpatialGrid class for viewport culling",
+              "description": "Create src/components/canvas/SpatialGrid.ts. Uniform grid with CELL_SIZE=200. Methods: update(address, x, y), query(AABB) -> string[], remove(address). Use Map<number, Set<string>> for cells.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.1.9"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/components/canvas/SpatialGrid.ts"] },
+                { "type": "file_contains", "path": "src/components/canvas/SpatialGrid.ts", "pattern": "class SpatialGrid" },
+                { "type": "lines_gt", "path": "src/components/canvas/SpatialGrid.ts", "min": 40 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.6.5",
+              "title": "Implement ObjectPool (SpritePool) class",
+              "description": "Create src/components/canvas/ObjectPool.ts. Methods: acquire(address, tier), release(address), prewarm(count). Manages PIXI.AnimatedSprite instances. Grows on demand (50 at a time), shrinks if >2x active for 30s.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.6.1"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/components/canvas/ObjectPool.ts"] },
+                { "type": "file_contains", "path": "src/components/canvas/ObjectPool.ts", "pattern": "acquire" },
+                { "type": "file_contains", "path": "src/components/canvas/ObjectPool.ts", "pattern": "release" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.6.6",
+              "title": "Implement Camera class with pan/zoom",
+              "description": "Create src/components/canvas/Camera.ts. Properties: x, y, zoom, targets with lerp smoothing. Zoom range 0.05-4.0, default 0.3. Implement zoomToward(worldX, worldY, delta). Apply via stage.scale and stage.position.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.6.1"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/components/canvas/Camera.ts"] },
+                { "type": "file_contains", "path": "src/components/canvas/Camera.ts", "pattern": "zoomToward" },
+                { "type": "lines_gt", "path": "src/components/canvas/Camera.ts", "min": 50 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.6.7",
+              "title": "Implement camera input handlers (mouse + touch)",
+              "description": "Wire up mouse drag (pan), scroll wheel (zoom toward cursor), touch drag (pan), pinch (zoom), double-click/tap (zoom 2x). Bind to PixiJS canvas events or DOM events on the canvas element.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.6.6"],
+              "detect": [
+                { "type": "file_contains", "path": "src/components/canvas/Camera.ts", "pattern": "wheel" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.6.8",
+              "title": "Create river background with tiling sprites",
+              "description": "Create placeholder background textures. Set up TilingSprite layers in backgroundLayer: far water (parallax 0.3x), mid water (parallax 0.6x), rock/plant decorations. Tile with camera movement.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.6.2"],
+              "detect": [
+                { "type": "file_contains", "path": "src/components/canvas/TroutScene.tsx", "pattern": "TilingSprite" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.6.9",
+              "title": "Implement LOD rendering modes",
+              "description": "Implement level-of-detail based on zoom: far zoom (<0.3x) shows colored dots, medium (0.3-1x) shows static sprites, close (>1x) shows animated sprites with labels. Adapt thresholds per quality preset.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.6.5", "1.6.6"],
+              "detect": [
+                { "type": "file_contains", "path": "src/components/canvas/TroutScene.tsx", "pattern": "LOD\\|lod\\|levelOfDetail" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.6.10",
+              "title": "Implement main render loop with frame reconciliation",
+              "description": "Create the rAF loop in TroutScene: get visible bounds from camera, receive VISIBLE_TROUTS from worker, reconcile sprites (acquire new, release exited), update positions/scales/animations, apply camera transform.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.6.4", "1.6.5", "1.6.6", "1.7.2"],
+              "detect": [
+                { "type": "file_contains", "path": "src/components/canvas/TroutScene.tsx", "pattern": "requestAnimationFrame" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            }
+          ]
+        },
+        {
+          "id": "1.7",
+          "name": "Web Worker & Simulation",
+          "tasks": [
+            {
+              "id": "1.7.1",
+              "title": "Implement trout movement logic",
+              "description": "Create src/lib/trout/movement.ts with updatePosition(), pickNextWaypoint(). Speed by tier (fry=60-100px/s to leviathan=8-15px/s). Smooth waypoint interpolation. Y-position bias by tier (small fish top, big fish deeper).",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.1.9"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/lib/trout/movement.ts"] },
+                { "type": "file_contains", "path": "src/lib/trout/movement.ts", "pattern": "updatePosition" },
+                { "type": "file_contains", "path": "src/lib/trout/movement.ts", "pattern": "pickNextWaypoint" },
+                { "type": "lines_gt", "path": "src/lib/trout/movement.ts", "min": 40 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.7.2",
+              "title": "Create Web Worker with message protocol",
+              "description": "Create src/workers/trout-simulation.worker.ts. Handle messages: INIT, LOAD_TROUTS, UPDATE_TROUT, REMOVE_TROUT, SET_VIEWPORT, TICK. Respond with VISIBLE_TROUTS (Float32Array transfer) and STATS. Run spatial grid + movement simulation.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.7.1", "1.6.4"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/workers/trout-simulation.worker.ts"] },
+                { "type": "file_contains", "path": "src/workers/trout-simulation.worker.ts", "pattern": "postMessage" },
+                { "type": "lines_gt", "path": "src/workers/trout-simulation.worker.ts", "min": 80 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.7.3",
+              "title": "Implement main-thread worker bridge",
+              "description": "Create a hook or utility that spawns the Web Worker, manages postMessage communication, handles VISIBLE_TROUTS responses, and provides a fallback simulation on main thread if Workers unavailable.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.7.2"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/hooks/useSimulation.ts"] },
+                { "type": "file_contains", "path": "src/hooks/useSimulation.ts", "pattern": "Worker" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.7.4",
+              "title": "Implement world size auto-scaling",
+              "description": "Add computeWorldSize(holderCount) that scales virtual world based on holder count. Target ~1600px2 per trout. Aspect ratio 5:3. Min 4000x2400. Send world dimensions to worker on INIT.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.7.2"],
+              "detect": [
+                { "type": "file_contains", "path": "src/lib/trout/sizing.ts", "pattern": "computeWorldSize" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            }
+          ]
+        },
+        {
+          "id": "1.8",
+          "name": "UI Overlay Components",
+          "tasks": [
+            {
+              "id": "1.8.1",
+              "title": "Create main page layout with canvas + overlay",
+              "description": "Create src/app/page.tsx as a client component. Mount TroutScene as fullscreen background. Create overlay container with pointer-events:none, individual interactive elements with pointer-events:auto.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.6.1", "1.1.2"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/app/page.tsx"] },
+                { "type": "file_contains", "path": "src/app/page.tsx", "pattern": "TroutScene" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.8.2",
+              "title": "Create app layout with providers",
+              "description": "Create src/app/layout.tsx with Solana wallet adapter provider, Zustand provider (if needed), global styles, metadata (title, description, OG tags).",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.1.2", "1.1.4"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/app/layout.tsx"] },
+                { "type": "file_contains", "path": "src/app/layout.tsx", "pattern": "WalletProvider" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.8.3",
+              "title": "Implement TroutTooltip overlay component",
+              "description": "Create src/components/overlay/TroutTooltip.tsx. Shows on hover/click: name, full address (copyable), tokens held, days held, rank. Positioned near the hovered trout (screen coords from PixiJS). Includes 'Follow' button.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.8.1"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/components/overlay/TroutTooltip.tsx"] },
+                { "type": "lines_gt", "path": "src/components/overlay/TroutTooltip.tsx", "min": 30 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.8.4",
+              "title": "Implement SearchBar overlay component",
+              "description": "Create src/components/overlay/SearchBar.tsx. Floating search input. On submit: find trout by address or custom name via /api/trouts/[address]. Pan camera to trout and highlight it. Autocomplete for names.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.8.1"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/components/overlay/SearchBar.tsx"] },
+                { "type": "lines_gt", "path": "src/components/overlay/SearchBar.tsx", "min": 20 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.8.5",
+              "title": "Implement WalletConnect (Find My Trout) component",
+              "description": "Create src/components/overlay/WalletConnect.tsx. 'Find My Trout' button. Connects Phantom, constructs sign message with timestamp+nonce, requests signature, calls POST /api/verify, stores JWT, shows rename UI on success.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.5.3", "1.8.1"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/components/overlay/WalletConnect.tsx"] },
+                { "type": "file_contains", "path": "src/components/overlay/WalletConnect.tsx", "pattern": "useWallet" },
+                { "type": "lines_gt", "path": "src/components/overlay/WalletConnect.tsx", "min": 40 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.8.6",
+              "title": "Implement StatsBar overlay component",
+              "description": "Create src/components/overlay/StatsBar.tsx. Bottom bar showing total trout count, fetched from /api/stats via SWR. Format: '12,400 trouts swimming'. Semi-transparent background.",
+              "status": "pending",
+              "priority": "low",
+              "blockedBy": ["1.5.5"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/components/overlay/StatsBar.tsx"] }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.8.7",
+              "title": "Implement zoom controls (+ / - buttons)",
+              "description": "Add zoom in/out buttons to the overlay. Wire to Camera.zoomToward with center-of-screen target. Make buttons large touch targets for mobile.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.6.6", "1.8.1"],
+              "detect": [
+                { "type": "file_contains", "path": "src/app/page.tsx", "pattern": "zoom" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.8.8",
+              "title": "Implement useTroutData hook for client data loading",
+              "description": "Create src/hooks/useTroutData.ts. Fetches /api/trouts in 1000-item pages. Streams batches to Web Worker. SWR for refresh. Handles loading states. Sends data to Zustand store.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.5.1", "1.1.10", "1.7.3"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/hooks/useTroutData.ts"] },
+                { "type": "file_contains", "path": "src/hooks/useTroutData.ts", "pattern": "api/trouts" },
+                { "type": "lines_gt", "path": "src/hooks/useTroutData.ts", "min": 30 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.8.9",
+              "title": "Implement device capability detection and quality presets",
+              "description": "Create src/hooks/useDeviceCapability.ts. Detect cores, memory, isMobile, pixelRatio. Map to low/medium/high quality preset. Store in Zustand. Apply preset to rendering limits.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.1.10"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/hooks/useDeviceCapability.ts"] },
+                { "type": "file_contains", "path": "src/hooks/useDeviceCapability.ts", "pattern": "hardwareConcurrency" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            }
+          ]
+        },
+        {
+          "id": "1.9",
+          "name": "Integration & Polish",
+          "tasks": [
+            {
+              "id": "1.9.1",
+              "title": "Wire up trout click/hover interaction to tooltip",
+              "description": "Detect trout sprite clicks/hovers in PixiJS. Convert world coords to screen coords. Show TroutTooltip at correct position. Set hoveredTrout in Zustand store.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.6.10", "1.8.3"],
+              "detect": [
+                { "type": "file_contains", "path": "src/components/canvas/TroutScene.tsx", "pattern": "hoveredTrout\\|onTroutHover\\|pointerover" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.9.2",
+              "title": "Implement follow camera mode",
+              "description": "When user clicks 'Follow' on tooltip, set selectedTrout in Zustand. Camera smoothly tracks the trout's position each frame. Zoom in to 1.5x minimum. Stop on Escape key or click elsewhere.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.9.1", "1.6.6"],
+              "detect": [
+                { "type": "file_contains", "path": "src/components/canvas/Camera.ts", "pattern": "follow\\|selectedTrout" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.9.3",
+              "title": "Implement search-to-camera navigation",
+              "description": "When SearchBar finds a trout, animate camera to its position. Highlight the trout sprite (pulsing glow or outline). Clear highlight after 5 seconds or on dismiss.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.8.4", "1.6.6"],
+              "detect": [],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.9.4",
+              "title": "Add loading state with progressive rendering",
+              "description": "Show 'Counting trouts...' on initial load. Display stats as soon as /api/stats returns. Render trouts progressively as batches arrive. Hide loading indicator when all data loaded.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.8.8"],
+              "detect": [],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.9.5",
+              "title": "Implement error handling and fallbacks",
+              "description": "Add error boundaries around PixiJS canvas. Toast notifications for API failures with retry. WebGL not-supported fallback message. Phantom not-installed link. Wallet rejection messages.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.8.1"],
+              "detect": [],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.9.6",
+              "title": "Add API rate limiting middleware",
+              "description": "Create rate limiting middleware for API routes: /api/verify 5/min/IP, /api/name 3/min/IP, /api/trouts 30/min/IP. Use Upstash ratelimit or custom Redis-based solution.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.2.4"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/lib/rate-limit.ts"] }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            }
+          ]
+        },
+        {
+          "id": "1.10",
+          "name": "Deployment",
+          "tasks": [
+            {
+              "id": "1.10.1",
+              "title": "Configure next.config.js for production",
+              "description": "Set up next.config.js with image domains, webpack config for Web Worker loading, any required headers or redirects.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.1.1"],
+              "detect": [
+                { "type": "file_exists", "paths": ["next.config.js"] },
+                { "type": "lines_gt", "path": "next.config.js", "min": 5 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.10.2",
+              "title": "Deploy to Vercel and configure environment variables",
+              "description": "Connect repo to Vercel. Set all environment variables. Verify build succeeds. Test cron job fires. Confirm Edge/Serverless runtime assignment is correct.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.9.5"],
+              "detect": [],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.10.3",
+              "title": "Provision Neon PostgreSQL database",
+              "description": "Create Neon project, run migrations, verify connection from Vercel serverless functions.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.2.5"],
+              "detect": [],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.10.4",
+              "title": "Provision Upstash Redis instance",
+              "description": "Create Upstash Redis database, configure REST endpoint, verify connection from Vercel Edge functions.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.2.4"],
+              "detect": [],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "1.10.5",
+              "title": "Run initial holder data sync",
+              "description": "Trigger the cron sync manually with real token mint address. Verify all 12,400 holders are imported. Check Redis cache is populated correctly.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": ["1.10.2", "1.10.3", "1.10.4"],
+              "detect": [],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Post-MVP",
+      "epics": [
+        {
+          "id": "2.1",
+          "name": "Leaderboard Page",
+          "tasks": [
+            {
+              "id": "2.1.1",
+              "title": "Create leaderboard page layout",
+              "description": "Create src/app/leaderboard/page.tsx. Responsive table layout with rank, name/address, tokens, days, score columns. Navigation back to main visualization.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.5.6"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/app/leaderboard/page.tsx"] }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "2.1.2",
+              "title": "Implement LeaderboardTable component with pagination",
+              "description": "Create src/components/leaderboard/LeaderboardTable.tsx. Paginated (50/page). Search/filter input. Click row to navigate to main page with ?trout= param. SWR data fetching from /api/leaderboard.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["2.1.1"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/components/leaderboard/LeaderboardTable.tsx"] },
+                { "type": "lines_gt", "path": "src/components/leaderboard/LeaderboardTable.tsx", "min": 50 }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            }
+          ]
+        },
+        {
+          "id": "2.2",
+          "name": "Screenshot & Sharing",
+          "tasks": [
+            {
+              "id": "2.2.1",
+              "title": "Implement canvas screenshot capture",
+              "description": "Create src/components/overlay/ScreenshotButton.tsx. Capture current PixiJS canvas to PNG blob via renderer.extract. Add branded watermark (logo + URL).",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.6.10"],
+              "detect": [
+                { "type": "file_exists", "paths": ["src/components/overlay/ScreenshotButton.tsx"] },
+                { "type": "file_contains", "path": "src/components/overlay/ScreenshotButton.tsx", "pattern": "toBlob\\|extract" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "2.2.2",
+              "title": "Implement share to X/Twitter",
+              "description": "Add share button that opens Twitter intent URL with pre-filled text and deep link. Include trout name and bigtrout.fish URL.",
+              "status": "pending",
+              "priority": "low",
+              "blockedBy": ["2.2.1"],
+              "detect": [
+                { "type": "file_contains", "path": "src/components/overlay/ScreenshotButton.tsx", "pattern": "twitter.com/intent" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "2.2.3",
+              "title": "Implement deep link support (?trout=address)",
+              "description": "On page load, check URL for ?trout= query param. If present, fetch that trout's data, animate camera to its position, enter follow mode, show tooltip.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.9.2"],
+              "detect": [
+                { "type": "file_contains", "path": "src/app/page.tsx", "pattern": "searchParams\\|trout=" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            }
+          ]
+        },
+        {
+          "id": "2.3",
+          "name": "Visual Polish & Art",
+          "tasks": [
+            {
+              "id": "2.3.1",
+              "title": "Create or acquire final pixel-art trout sprites",
+              "description": "Replace placeholder sprites with polished pixel art. 6 tiers, each with swim animation frames. Output as sprite sheet atlas (PNG + JSON). Ensure easy swap via public/assets/sprites/.",
+              "status": "pending",
+              "priority": "high",
+              "blockedBy": [],
+              "detect": [
+                { "type": "file_exists", "paths": ["public/assets/sprites/trout-atlas.png", "public/assets/sprites/trout-atlas.json"] }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06",
+              "notes": "Can be done in parallel with development. AI-generated or commissioned artist."
+            },
+            {
+              "id": "2.3.2",
+              "title": "Create river background art assets",
+              "description": "Design tileable river background textures: deep water, mid water, riverbed. Add rock and plant decoration sprites. Pixel-art style matching trout sprites.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": [],
+              "detect": [
+                { "type": "dir_not_empty", "path": "public/assets/background" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "2.3.3",
+              "title": "Add animated water effects (bubbles, ripples)",
+              "description": "Add particle effects to effectsLayer: floating bubbles, surface ripples, subtle light caustics. Use ParticleContainer for performance.",
+              "status": "pending",
+              "priority": "low",
+              "blockedBy": ["1.6.2"],
+              "detect": [],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "2.3.4",
+              "title": "Create logo and UI icons",
+              "description": "Design Big Trout Fish logo, favicon, and UI icons (search, zoom, screenshot, wallet). Place in public/assets/ui/.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": [],
+              "detect": [
+                { "type": "dir_not_empty", "path": "public/assets/ui" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "2.3.5",
+              "title": "Add OG image and social media metadata",
+              "description": "Create Open Graph image for link previews. Add proper meta tags in layout.tsx: og:title, og:description, og:image, twitter:card.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["2.3.4"],
+              "detect": [
+                { "type": "file_contains", "path": "src/app/layout.tsx", "pattern": "openGraph\\|og:image" }
+              ],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            }
+          ]
+        },
+        {
+          "id": "2.4",
+          "name": "Advanced Features",
+          "tasks": [
+            {
+              "id": "2.4.1",
+              "title": "Add ambient underwater audio",
+              "description": "Add optional ambient river/underwater sound. Muted by default, toggle via UI button. Use Web Audio API or simple HTML5 audio element with loop.",
+              "status": "pending",
+              "priority": "low",
+              "blockedBy": ["1.8.1"],
+              "detect": [],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "2.4.2",
+              "title": "Implement minimap navigation widget",
+              "description": "Small overview map in corner showing density heatmap of all trouts. Current viewport indicated by a rectangle. Click minimap to jump to location.",
+              "status": "pending",
+              "priority": "low",
+              "blockedBy": ["1.6.10"],
+              "detect": [],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "2.4.3",
+              "title": "Add SNS (.sol domain) resolution for display names",
+              "description": "For holders without custom names, attempt to resolve their Solana Name Service (.sol) domain. Display domain name instead of truncated address.",
+              "status": "pending",
+              "priority": "low",
+              "blockedBy": ["1.4.4"],
+              "detect": [],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "2.4.4",
+              "title": "Build analytics dashboard (holder growth over time)",
+              "description": "Track daily holder count snapshots. Create a simple chart page showing holder count over time, new holders per day, average holding duration trends.",
+              "status": "pending",
+              "priority": "low",
+              "blockedBy": ["1.4.2"],
+              "detect": [],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "2.4.5",
+              "title": "Handle sold-out wallets gracefully",
+              "description": "When cron detects a holder's balance dropped to 0: fade out the trout over the next sync cycle (ghost sprite at 50% opacity), then remove after 24h. Preserve custom name for 7 days in case they buy back.",
+              "status": "pending",
+              "priority": "medium",
+              "blockedBy": ["1.4.2"],
+              "detect": [],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            },
+            {
+              "id": "2.4.6",
+              "title": "Add mobile 'best on desktop' banner",
+              "description": "Show a dismissible banner on mobile devices suggesting desktop for the full experience. Save dismissal to localStorage so it only shows once.",
+              "status": "pending",
+              "priority": "low",
+              "blockedBy": ["1.8.9"],
+              "detect": [],
+              "createdAt": "2026-02-06",
+              "updatedAt": "2026-02-06"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

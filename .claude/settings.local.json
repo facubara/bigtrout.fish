@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\\\Users\\\\Facundo\\\\Desktop\\\\alpha-board\")",
+      "Bash(dir:*)",
+      "Bash(del \"C:\\\\Users\\\\Facundo\\\\Desktop\\\\alpha-board\\\\skills\\\\create-skill\\\\create-skill.md\")",
+      "Bash(npx skills add:*)",
+      "Bash(ls -la \"C:\\\\Users\\\\Facundo\\\\Desktop\\\\alpha-board\\\\.claude\\\\skills\"\" 2>/dev/null; ls -la \"C:UsersFacundoDesktopalpha-board.claude\"\")",
+      "Bash(claude mcp add:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(node --version:*)",
+      "Bash(npm --version:*)",
+      "Bash(pip install:*)",
+      "Bash(npx create-next-app:*)",
+      "Bash(npx create-next-app@latest web --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --no-turbopack --yes)",
+      "Bash(npm install:*)",
+      "Bash(uv venv:*)",
+      "Bash(.venv/Scripts/activate)",
+      "Bash(uv pip install:*)",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(npx next build)",
+      "Bash(git check-ignore:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat\\(scaffold\\): set up monorepo with worker/ and web/ projects\n\n- Create Python worker with uv, FastAPI, SQLAlchemy async, Alembic, APScheduler\n- Scaffold Next.js 16 frontend with TypeScript, Tailwind, Neon driver\n- Add config \\(Pydantic Settings\\), db engine, Dockerfile, .env.example\n- Create package stubs for exchange, indicators, scoring, agents, pipeline\n\nSession: docs/sessions/2026-02-04-1811-session.md\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(npx create-next-app@latest:*)"
+    ]
+  }
+}
