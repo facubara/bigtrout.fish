@@ -35,6 +35,16 @@ const TIER_SIZES: Record<TroutTier, { w: number; h: number }> = {
   6: { w: 96, h: 48 },
 };
 
+// Dot sizes for LOD rendering (far zoom)
+const TIER_DOT_SIZES: Record<TroutTier, number> = {
+  1: 1,
+  2: 2,
+  3: 3,
+  4: 3,
+  5: 4,
+  6: 5,
+};
+
 // ─── Component ───────────────────────────────────────────────
 
 export default function TroutScene() {
@@ -42,6 +52,7 @@ export default function TroutScene() {
   const appRef = useRef<PIXI.Application | null>(null);
   const cameraRef = useRef<Camera | null>(null);
   const poolRef = useRef<SpritePool | null>(null);
+  const dotPoolRef = useRef<SpritePool | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const visibleTroutsRef = useRef<VisibleTrout[]>([]);
   const isDragging = useRef(false);
@@ -49,32 +60,39 @@ export default function TroutScene() {
   const rafRef = useRef<number>(0);
   const lastTimeRef = useRef(0);
 
-  const quality = useTroutStore((s) => s.quality);
-  const setHoveredTrout = useTroutStore((s) => s.setHoveredTrout);
-  const selectedTrout = useTroutStore((s) => s.selectedTrout);
+  // NOTE: quality, selectedTrout, and setHoveredTrout are read via
+  // useTroutStore.getState() inside the render loop to avoid re-mounting
+  // the entire PixiJS application when these values change.
 
   // Generate placeholder textures for each tier
   const texturesRef = useRef<Map<TroutTier, PIXI.Texture>>(new Map());
+  const dotTexturesRef = useRef<Map<TroutTier, PIXI.Texture>>(new Map());
 
   const createPlaceholderTextures = useCallback((app: PIXI.Application) => {
     const tiers: TroutTier[] = [1, 2, 3, 4, 5, 6];
     for (const tier of tiers) {
+      // Sprite textures
       const { w, h } = TIER_SIZES[tier];
       const g = new PIXI.Graphics();
-      g.fill(TIER_COLORS[tier]);
-      // Fish body (ellipse)
       g.ellipse(w / 2, h / 2, w / 2, h / 2);
-      g.fill();
-      // Tail
       g.fill(TIER_COLORS[tier]);
       g.moveTo(0, h / 4);
       g.lineTo(-w / 4, 0);
-      g.lineTo(0, h * 3 / 4);
+      g.lineTo(0, (h * 3) / 4);
       g.closePath();
-      g.fill();
+      g.fill(TIER_COLORS[tier]);
       const texture = app.renderer.generateTexture(g);
       texturesRef.current.set(tier, texture);
       g.destroy();
+
+      // Dot textures for LOD
+      const dotSize = TIER_DOT_SIZES[tier];
+      const dg = new PIXI.Graphics();
+      dg.circle(dotSize, dotSize, dotSize);
+      dg.fill(TIER_COLORS[tier]);
+      const dotTex = app.renderer.generateTexture(dg);
+      dotTexturesRef.current.set(tier, dotTex);
+      dg.destroy();
     }
   }, []);
 
@@ -109,28 +127,31 @@ export default function TroutScene() {
       // Create placeholder textures
       createPlaceholderTextures(app);
 
-      // Layer hierarchy
+      // Layer hierarchy per spec
       const backgroundLayer = new PIXI.Container();
+      const dotLayer = new PIXI.Container();
       const troutLayer = new PIXI.Container();
       const labelLayer = new PIXI.Container();
       app.stage.addChild(backgroundLayer);
+      app.stage.addChild(dotLayer);
       app.stage.addChild(troutLayer);
       app.stage.addChild(labelLayer);
 
-      // Background — simple solid for now
+      // Background -- solid river color extended far
       const bg = new PIXI.Graphics();
-      bg.fill(0x2d6a5a);
       bg.rect(-50000, -50000, 100000, 100000);
-      bg.fill();
+      bg.fill(0x2d6a5a);
       backgroundLayer.addChild(bg);
 
       // Camera
       const cam = createCamera(app.screen.width, app.screen.height);
       cameraRef.current = cam;
 
-      // Object pool
+      // Object pools
       const pool = new SpritePool(troutLayer, 300);
       poolRef.current = pool;
+      const dotPool = new SpritePool(dotLayer, 500);
+      dotPoolRef.current = dotPool;
 
       // Spawn Web Worker
       const worker = new Worker(
@@ -194,42 +215,76 @@ export default function TroutScene() {
         const bounds = getVisibleBounds(cam);
         worker.postMessage({ type: "SET_VIEWPORT", payload: bounds });
 
-        // Reconcile sprites
+        // Reconcile sprites with LOD support
         const visible = visibleTroutsRef.current;
         const visibleSet = new Set(visible.map((t) => t.address));
-        const pool = poolRef.current!;
+        const spritePool = poolRef.current!;
+        const dPool = dotPoolRef.current!;
 
-        // Release sprites that left viewport
-        pool.releaseExcept(visibleSet);
+        // Get quality from store
+        const currentQuality = useTroutStore.getState().quality;
+        const maxSprites =
+          currentQuality === "low"
+            ? 100
+            : currentQuality === "medium"
+              ? 300
+              : 600;
 
-        // Determine max visible sprites based on quality
-        const maxSprites = quality === "low" ? 100 : quality === "medium" ? 300 : 600;
+        // Determine if we should use dot LOD based on quality and zoom
+        const useDots =
+          currentQuality === "low"
+            ? cam.zoom < 1.0
+            : currentQuality === "medium"
+              ? cam.zoom < 0.3
+              : cam.zoom < 0.15;
 
-        // Update/acquire sprites
-        const count = Math.min(visible.length, maxSprites);
-        for (let i = 0; i < count; i++) {
-          const t = visible[i];
-          const sprite = pool.acquire(t.address);
-          sprite.x = t.x;
-          sprite.y = t.y;
+        if (useDots) {
+          // LOD mode: render as dots, release all sprites
+          spritePool.releaseExcept(new Set<string>());
+          dPool.releaseExcept(visibleSet);
 
-          // Apply tier texture
-          const tex = texturesRef.current.get(t.tier);
-          if (tex && sprite.texture !== tex) {
-            sprite.texture = tex;
+          const count = Math.min(visible.length, maxSprites * 2);
+          for (let i = 0; i < count; i++) {
+            const t = visible[i];
+            const dot = dPool.acquire(t.address);
+            dot.x = t.x;
+            dot.y = t.y;
+            const dotTex = dotTexturesRef.current.get(t.tier);
+            if (dotTex && dot.texture !== dotTex) {
+              dot.texture = dotTex;
+            }
           }
+        } else {
+          // Full sprite mode: release all dots
+          dPool.releaseExcept(new Set<string>());
+          spritePool.releaseExcept(visibleSet);
 
-          // Apply scale and direction
-          const s = t.scale || 1;
-          sprite.scale.x = t.direction * s;
-          sprite.scale.y = s;
+          const count = Math.min(visible.length, maxSprites);
+          for (let i = 0; i < count; i++) {
+            const t = visible[i];
+            const sprite = spritePool.acquire(t.address);
+            sprite.x = t.x;
+            sprite.y = t.y;
 
-          // Make interactive for hover
-          sprite.eventMode = "static";
-          sprite.cursor = "pointer";
+            // Apply tier texture
+            const tex = texturesRef.current.get(t.tier);
+            if (tex && sprite.texture !== tex) {
+              sprite.texture = tex;
+            }
+
+            // Apply scale and direction
+            const s = t.scale || 1;
+            sprite.scale.x = t.direction * s;
+            sprite.scale.y = s;
+
+            // Make interactive for hover
+            sprite.eventMode = "static";
+            sprite.cursor = "pointer";
+          }
         }
 
-        pool.maybeShrink();
+        spritePool.maybeShrink();
+        dPool.maybeShrink();
         rafRef.current = requestAnimationFrame(loop);
       }
 
@@ -256,10 +311,12 @@ export default function TroutScene() {
       destroyed = true;
       cancelAnimationFrame(rafRef.current);
       workerRef.current?.terminate();
+      workerRef.current = null;
       appRef.current?.destroy(true);
       appRef.current = null;
     };
-  }, [createPlaceholderTextures, quality, setHoveredTrout, selectedTrout]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- quality and selectedTrout are read via getState() inside the loop
+  }, [createPlaceholderTextures]);
 
   // ─── Input Handlers ──────────────────────────────────────
 
@@ -287,6 +344,13 @@ export default function TroutScene() {
     zoomToward(cam, world.x, world.y, -e.deltaY);
   }, []);
 
+  const onDoubleClick = useCallback((e: React.MouseEvent) => {
+    if (!cameraRef.current) return;
+    const cam = cameraRef.current;
+    const world = screenToWorld(cam, e.clientX, e.clientY);
+    zoomToward(cam, world.x, world.y, 500); // zoom in 2x at point
+  }, []);
+
   return (
     <div
       ref={containerRef}
@@ -296,6 +360,7 @@ export default function TroutScene() {
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerUp}
       onWheel={onWheel}
+      onDoubleClick={onDoubleClick}
       style={{ touchAction: "none" }}
     />
   );

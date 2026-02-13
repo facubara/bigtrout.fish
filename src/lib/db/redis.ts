@@ -5,9 +5,9 @@ import { computeTroutScore, computeThresholds, assignTier } from "../trout/sizin
 const CACHE_TTL = 720; // 12 minutes in seconds
 
 function createRedis() {
-  const url = process.env.REDIS_URL;
-  if (!url) {
-    throw new Error("REDIS_URL environment variable is not set");
+  // Upstash Redis.fromEnv() reads UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    throw new Error("UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN environment variables are required");
   }
   return Redis.fromEnv();
 }
@@ -65,34 +65,49 @@ export async function populateCache(
   const scores = scored.map((s) => s.score);
   const thresholds = computeThresholds(scores);
 
-  const pipeline = redis.pipeline();
+  // Delete old sorted set to remove stale entries from previous syncs
+  await redis.del("trout:all");
 
-  pipeline.set("trout:thresholds", JSON.stringify(thresholds), {
+  // Process in batches to stay within Upstash pipeline limits (~1000 commands)
+  const PIPELINE_BATCH = 300; // 3 commands per holder -> ~300 holders per batch
+
+  // First pipeline: thresholds
+  const initPipeline = redis.pipeline();
+  initPipeline.set("trout:thresholds", JSON.stringify(thresholds), {
     ex: CACHE_TTL,
   });
+  await initPipeline.exec();
 
-  // Populate sorted set and individual hashes
-  for (let i = 0; i < scored.length; i++) {
-    const s = scored[i];
-    const tier = assignTier(s.score, thresholds);
-    const { x, y } = seedPosition(s.address, worldWidth, worldHeight);
+  // Populate sorted set and individual hashes in batches
+  for (let batch = 0; batch < scored.length; batch += PIPELINE_BATCH) {
+    const pipeline = redis.pipeline();
+    const end = Math.min(batch + PIPELINE_BATCH, scored.length);
 
-    pipeline.zadd("trout:all", { score: s.score, member: s.address });
-    pipeline.hset(`trout:data:${s.address}`, {
-      balance: s.balance.toString(),
-      firstSeen: s.firstSeen.toISOString(),
-      score: s.score.toFixed(2),
-      tier: tier.toString(),
-      rank: (i + 1).toString(),
-      displayName: nameMap.get(s.address) ?? "",
-      x: x.toFixed(1),
-      y: y.toFixed(1),
-      daysHeld: s.daysHeld.toString(),
-    });
-    pipeline.expire(`trout:data:${s.address}`, CACHE_TTL);
+    for (let i = batch; i < end; i++) {
+      const s = scored[i];
+      const tier = assignTier(s.score, thresholds);
+      const { x, y } = seedPosition(s.address, worldWidth, worldHeight);
+
+      pipeline.zadd("trout:all", { score: s.score, member: s.address });
+      pipeline.hset(`trout:data:${s.address}`, {
+        balance: s.balance.toString(),
+        firstSeen: s.firstSeen.toISOString(),
+        score: s.score.toFixed(2),
+        tier: tier.toString(),
+        rank: (i + 1).toString(),
+        displayName: nameMap.get(s.address) ?? "",
+        x: x.toFixed(1),
+        y: y.toFixed(1),
+        daysHeld: s.daysHeld.toString(),
+      });
+      pipeline.expire(`trout:data:${s.address}`, CACHE_TTL);
+    }
+
+    await pipeline.exec();
   }
 
-  pipeline.expire("trout:all", CACHE_TTL);
+  // Set TTL on sorted set
+  await redis.expire("trout:all", CACHE_TTL);
 
   // Stats
   const totalSupply = scored.reduce((sum, s) => sum + s.humanBalance, 0);
@@ -112,22 +127,31 @@ export async function populateCache(
           score: scored[0].score,
         }
       : null,
-    oldestTrout: scored.reduce<(typeof scored)[0] | null>(
-      (oldest, s) =>
-        !oldest || s.daysHeld > oldest.daysHeld ? s : oldest,
+    oldestTrout: scored.reduce<{ address: string; displayName: string | null; daysHeld: number } | null>(
+      (oldest, s) => {
+        if (!oldest || s.daysHeld > oldest.daysHeld) {
+          return {
+            address: s.address,
+            displayName: nameMap.get(s.address) ?? null,
+            daysHeld: s.daysHeld,
+          };
+        }
+        return oldest;
+      },
       null
     ),
     lastUpdated: new Date().toISOString(),
   };
 
-  pipeline.set("trout:stats", JSON.stringify(stats), { ex: CACHE_TTL });
+  // Final pipeline: stats + name uniqueness map
+  const finalPipeline = redis.pipeline();
+  finalPipeline.set("trout:stats", JSON.stringify(stats), { ex: CACHE_TTL });
 
-  // Name uniqueness map
   for (const n of names) {
-    pipeline.hset("trout:names", { [n.displayName.toLowerCase()]: n.address });
+    finalPipeline.hset("trout:names", { [n.displayName.toLowerCase()]: n.address });
   }
 
-  await pipeline.exec();
+  await finalPipeline.exec();
 }
 
 // ─── Deterministic position from address ─────────────────────

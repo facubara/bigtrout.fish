@@ -4,11 +4,13 @@ import { getRedis, populateCache } from "@/lib/db/redis";
 import { holders, customNames } from "@/lib/db/schema";
 import { fetchAllHolders } from "@/lib/solana/holders";
 import { computeWorldSize } from "@/lib/trout/sizing";
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 const LOCK_KEY = "trout:sync:lock";
 const LOCK_TTL = 300; // 5 minutes
 const TOKEN_DECIMALS = 9; // adjust per actual token
+
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   // Verify cron secret
@@ -70,31 +72,38 @@ export async function POST(request: NextRequest) {
 
     // 4. Apply changes in batches
     const BATCH_SIZE = 500;
+    const now = new Date();
 
+    // Batch inserts
     for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
       const batch = toInsert.slice(i, i + BATCH_SIZE);
       await db.insert(holders).values(
         batch.map((h) => ({
           address: h.address,
           balance: h.balance,
-          firstSeen: new Date(),
-          lastUpdated: new Date(),
+          firstSeen: now,
+          lastUpdated: now,
         }))
       );
     }
 
-    for (const item of toUpdate) {
-      await db
-        .update(holders)
-        .set({ balance: item.balance, lastUpdated: new Date() })
-        .where(eq(holders.address, item.address));
+    // Batch updates (individual queries but batched in groups to limit concurrency)
+    for (let i = 0; i < toUpdate.length; i += BATCH_SIZE) {
+      const batch = toUpdate.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map((item) =>
+          db
+            .update(holders)
+            .set({ balance: item.balance, lastUpdated: now })
+            .where(eq(holders.address, item.address))
+        )
+      );
     }
 
+    // Batch deletes using inArray
     for (let i = 0; i < toDelete.length; i += BATCH_SIZE) {
       const batch = toDelete.slice(i, i + BATCH_SIZE);
-      for (const address of batch) {
-        await db.delete(holders).where(eq(holders.address, address));
-      }
+      await db.delete(holders).where(inArray(holders.address, batch));
     }
 
     // 5. Fetch fresh data for cache

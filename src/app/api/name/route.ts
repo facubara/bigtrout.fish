@@ -31,7 +31,13 @@ export async function POST(request: NextRequest) {
       new TextEncoder().encode(jwtSecret),
       { issuer: "bigtrout.fish" }
     );
-    address = payload.sub as string;
+    if (!payload.sub || typeof payload.sub !== "string") {
+      return NextResponse.json(
+        { error: "Invalid token: missing subject" },
+        { status: 401 }
+      );
+    }
+    address = payload.sub;
   } catch {
     return NextResponse.json(
       { error: "Invalid or expired token" },
@@ -40,7 +46,15 @@ export async function POST(request: NextRequest) {
   }
 
   // Parse body
-  const body = await request.json();
+  let body: { displayName?: unknown };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid JSON body" },
+      { status: 400 }
+    );
+  }
   const { displayName } = body;
 
   if (!displayName || typeof displayName !== "string") {
@@ -92,25 +106,37 @@ export async function POST(request: NextRequest) {
 
   const oldName = oldRecord[0]?.displayName;
 
-  // Upsert
-  await db
-    .insert(customNames)
-    .values({
-      address,
-      displayName,
-      verifiedAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .onConflictDoUpdate({
-      target: customNames.address,
-      set: { displayName, updatedAt: new Date() },
-    });
+  // Upsert — wrapped in try-catch to handle race condition on unique name index
+  try {
+    await db
+      .insert(customNames)
+      .values({
+        address,
+        displayName,
+        verifiedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: customNames.address,
+        set: { displayName, updatedAt: new Date() },
+      });
+  } catch (err: unknown) {
+    // Unique constraint violation from concurrent requests
+    const message = err instanceof Error ? err.message : "";
+    if (message.includes("unique") || message.includes("duplicate")) {
+      return NextResponse.json(
+        { error: "Name already taken" },
+        { status: 409 }
+      );
+    }
+    throw err;
+  }
 
   // Update Redis
   const pipeline = redis.pipeline();
   pipeline.hset(`trout:data:${address}`, { displayName });
   pipeline.hset("trout:names", { [displayName.toLowerCase()]: address });
-  if (oldName) {
+  if (oldName && oldName.toLowerCase() !== displayName.toLowerCase()) {
     pipeline.hdel("trout:names", oldName.toLowerCase());
   }
   await pipeline.exec();

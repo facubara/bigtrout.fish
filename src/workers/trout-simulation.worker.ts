@@ -215,21 +215,32 @@ function tick(deltaMs: number): void {
       }
     }
 
-    // Animation timer
-    s.animTimer += deltaMs;
+    // Animation timer — wrap to prevent float precision loss after long sessions
+    s.animTimer = (s.animTimer + deltaMs) % 100000;
 
     // Update spatial grid
     gridInsert(s.address, s.x, s.y);
   }
 }
 
-function getVisibleTrouts(): { addresses: string[]; buffer: Float32Array } {
-  const addrs = gridQuery(viewport);
-  const buffer = new Float32Array(addrs.length * FLOATS_PER_TROUT);
+function getVisibleTrouts(): { addresses: string[]; buffer: Float32Array; count: number } {
+  const rawAddrs = gridQuery(viewport);
 
-  for (let i = 0; i < addrs.length; i++) {
-    const s = trouts.get(addrs[i]);
-    if (!s) continue;
+  // Filter out addresses that aren't in the trouts map (race condition during removal)
+  const validAddrs: string[] = [];
+  const validStates: SimState[] = [];
+  for (let i = 0; i < rawAddrs.length; i++) {
+    const s = trouts.get(rawAddrs[i]);
+    if (s) {
+      validAddrs.push(rawAddrs[i]);
+      validStates.push(s);
+    }
+  }
+
+  const buffer = new Float32Array(validAddrs.length * FLOATS_PER_TROUT);
+
+  for (let i = 0; i < validStates.length; i++) {
+    const s = validStates[i];
     const off = i * FLOATS_PER_TROUT;
     const frames = TIER_FRAMES[s.tier];
     const animFrame = Math.floor(s.animTimer / 200) % frames;
@@ -242,7 +253,7 @@ function getVisibleTrouts(): { addresses: string[]; buffer: Float32Array } {
     buffer[off + 5] = animFrame;
   }
 
-  return { addresses: addrs, buffer };
+  return { addresses: validAddrs, buffer, count: validAddrs.length };
 }
 
 // ─── Message Handler ─────────────────────────────────────────

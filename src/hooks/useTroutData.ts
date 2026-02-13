@@ -5,7 +5,11 @@ import useSWR from "swr";
 import { useTroutStore } from "@/lib/store";
 import type { TroutsResponse, StatsResponse } from "@/types";
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+const fetcher = (url: string) =>
+  fetch(url).then((r) => {
+    if (!r.ok) throw new Error(`API error: ${r.status}`);
+    return r.json();
+  });
 
 export function useTroutData(worker: Worker | null) {
   const setTrouts = useTroutStore((s) => s.setTrouts);
@@ -40,9 +44,10 @@ export function useTroutData(worker: Worker | null) {
           ? `/api/trouts?limit=1000&cursor=${cursor}`
           : "/api/trouts?limit=1000";
         const res = await fetch(url);
+        if (!res.ok) break;
         const data: TroutsResponse = await res.json();
 
-        if (data.trouts.length > 0) {
+        if (data.trouts && data.trouts.length > 0) {
           allTrouts = allTrouts.concat(data.trouts);
           addTrouts(data.trouts);
 
