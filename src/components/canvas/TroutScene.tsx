@@ -14,36 +14,16 @@ import {
 } from "./Camera";
 import { SpritePool } from "./ObjectPool";
 import type { TroutTier, VisibleTrout } from "@/types";
+import {
+  createTroutTextures,
+  createShadowTextures,
+  createDotTextures,
+  createWaterTexture,
+} from "@/lib/trout/pixel-sprites";
 
-// ─── Tier colors for placeholder rendering ───────────────────
-
-const TIER_COLORS: Record<TroutTier, number> = {
-  1: 0x88ccee, // light blue
-  2: 0x44aa88, // teal
-  3: 0x33bb55, // green
-  4: 0xddcc33, // gold
-  5: 0xff8833, // orange
-  6: 0xff3355, // red
-};
-
-const TIER_SIZES: Record<TroutTier, { w: number; h: number }> = {
-  1: { w: 8, h: 4 },
-  2: { w: 16, h: 8 },
-  3: { w: 32, h: 16 },
-  4: { w: 48, h: 24 },
-  5: { w: 64, h: 32 },
-  6: { w: 96, h: 48 },
-};
-
-// Dot sizes for LOD rendering (far zoom)
-const TIER_DOT_SIZES: Record<TroutTier, number> = {
-  1: 1,
-  2: 2,
-  3: 3,
-  4: 3,
-  5: 4,
-  6: 5,
-};
+// Shadow offset (top-down "depth" shadow)
+const SHADOW_OFFSET_X = 2;
+const SHADOW_OFFSET_Y = 4;
 
 // ─── Component ───────────────────────────────────────────────
 
@@ -53,6 +33,7 @@ export default function TroutScene() {
   const cameraRef = useRef<Camera | null>(null);
   const poolRef = useRef<SpritePool | null>(null);
   const dotPoolRef = useRef<SpritePool | null>(null);
+  const shadowPoolRef = useRef<SpritePool | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const visibleTroutsRef = useRef<VisibleTrout[]>([]);
   const isDragging = useRef(false);
@@ -60,40 +41,15 @@ export default function TroutScene() {
   const rafRef = useRef<number>(0);
   const lastTimeRef = useRef(0);
 
-  // NOTE: quality, selectedTrout, and setHoveredTrout are read via
-  // useTroutStore.getState() inside the render loop to avoid re-mounting
-  // the entire PixiJS application when these values change.
-
-  // Generate placeholder textures for each tier
+  // Texture refs
   const texturesRef = useRef<Map<TroutTier, PIXI.Texture>>(new Map());
   const dotTexturesRef = useRef<Map<TroutTier, PIXI.Texture>>(new Map());
+  const shadowTexturesRef = useRef<Map<TroutTier, PIXI.Texture>>(new Map());
 
-  const createPlaceholderTextures = useCallback((app: PIXI.Application) => {
-    const tiers: TroutTier[] = [1, 2, 3, 4, 5, 6];
-    for (const tier of tiers) {
-      // Sprite textures
-      const { w, h } = TIER_SIZES[tier];
-      const g = new PIXI.Graphics();
-      g.ellipse(w / 2, h / 2, w / 2, h / 2);
-      g.fill(TIER_COLORS[tier]);
-      g.moveTo(0, h / 4);
-      g.lineTo(-w / 4, 0);
-      g.lineTo(0, (h * 3) / 4);
-      g.closePath();
-      g.fill(TIER_COLORS[tier]);
-      const texture = app.renderer.generateTexture(g);
-      texturesRef.current.set(tier, texture);
-      g.destroy();
-
-      // Dot textures for LOD
-      const dotSize = TIER_DOT_SIZES[tier];
-      const dg = new PIXI.Graphics();
-      dg.circle(dotSize, dotSize, dotSize);
-      dg.fill(TIER_COLORS[tier]);
-      const dotTex = app.renderer.generateTexture(dg);
-      dotTexturesRef.current.set(tier, dotTex);
-      dg.destroy();
-    }
+  const createTextures = useCallback((app: PIXI.Application) => {
+    texturesRef.current = createTroutTextures(app);
+    shadowTexturesRef.current = createShadowTextures(app);
+    dotTexturesRef.current = createDotTextures(app);
   }, []);
 
   // ─── Initialize PixiJS ───────────────────────────────────
@@ -109,7 +65,7 @@ export default function TroutScene() {
       await app.init({
         width: window.innerWidth,
         height: window.innerHeight,
-        backgroundColor: 0x2d6a5a,
+        backgroundColor: 0x2a5c5a,
         antialias: false,
         resolution: window.devicePixelRatio,
         autoDensity: true,
@@ -124,24 +80,31 @@ export default function TroutScene() {
       container.appendChild(app.canvas as HTMLCanvasElement);
       appRef.current = app;
 
-      // Create placeholder textures
-      createPlaceholderTextures(app);
+      // Generate pixel-art textures
+      createTextures(app);
 
-      // Layer hierarchy per spec
+      // Layer hierarchy
       const backgroundLayer = new PIXI.Container();
       const dotLayer = new PIXI.Container();
+      const shadowLayer = new PIXI.Container();
       const troutLayer = new PIXI.Container();
       const labelLayer = new PIXI.Container();
       app.stage.addChild(backgroundLayer);
       app.stage.addChild(dotLayer);
+      app.stage.addChild(shadowLayer);
       app.stage.addChild(troutLayer);
       app.stage.addChild(labelLayer);
 
-      // Background -- solid river color extended far
-      const bg = new PIXI.Graphics();
-      bg.rect(-50000, -50000, 100000, 100000);
-      bg.fill(0x2d6a5a);
-      backgroundLayer.addChild(bg);
+      // Water background — tiling texture
+      const waterTex = createWaterTexture(app);
+      const tilingBg = new PIXI.TilingSprite({
+        texture: waterTex,
+        width: 100000,
+        height: 100000,
+      });
+      tilingBg.x = -50000;
+      tilingBg.y = -50000;
+      backgroundLayer.addChild(tilingBg);
 
       // Camera
       const cam = createCamera(app.screen.width, app.screen.height);
@@ -152,12 +115,45 @@ export default function TroutScene() {
       poolRef.current = pool;
       const dotPool = new SpritePool(dotLayer, 500);
       dotPoolRef.current = dotPool;
+      const shadowPool = new SpritePool(shadowLayer, 300);
+      shadowPoolRef.current = shadowPool;
 
       // Spawn Web Worker
       const worker = new Worker(
         new URL("../../workers/trout-simulation.worker.ts", import.meta.url)
       );
       workerRef.current = worker;
+
+      // ─── Mock trout data for development ─────────────────
+      // Generate fake holders across all 6 tiers so we can see
+      // the pixel-art sprites without a live database.
+      {
+        const mockTrouts: { address: string; x: number; y: number; tier: TroutTier; scale: number }[] = [];
+        const tierCounts: Record<TroutTier, number> = { 1: 60, 2: 40, 3: 30, 4: 15, 5: 8, 6: 3 };
+        const tierScales: Record<TroutTier, [number, number]> = {
+          1: [0.5, 0.7],
+          2: [0.7, 0.95],
+          3: [0.9, 1.15],
+          4: [1.1, 1.45],
+          5: [1.4, 1.75],
+          6: [1.8, 2.2],
+        };
+        let idx = 0;
+        for (const tier of [1, 2, 3, 4, 5, 6] as TroutTier[]) {
+          for (let i = 0; i < tierCounts[tier]; i++) {
+            const [sMin, sMax] = tierScales[tier];
+            mockTrouts.push({
+              address: `mock_${tier}_${idx++}`,
+              x: 1000 + Math.random() * 8000,
+              y: 1000 + Math.random() * 4000,
+              tier,
+              scale: sMin + Math.random() * (sMax - sMin),
+            });
+          }
+        }
+        worker.postMessage({ type: "INIT", payload: { worldWidth: 10000, worldHeight: 6000 } });
+        worker.postMessage({ type: "LOAD_TROUTS", payload: mockTrouts });
+      }
 
       worker.onmessage = (e) => {
         const msg = e.data;
@@ -220,6 +216,7 @@ export default function TroutScene() {
         const visibleSet = new Set(visible.map((t) => t.address));
         const spritePool = poolRef.current!;
         const dPool = dotPoolRef.current!;
+        const sPool = shadowPoolRef.current!;
 
         // Get quality from store
         const currentQuality = useTroutStore.getState().quality;
@@ -239,8 +236,9 @@ export default function TroutScene() {
               : cam.zoom < 0.15;
 
         if (useDots) {
-          // LOD mode: render as dots, release all sprites
+          // LOD mode: render as dots, release sprites and shadows
           spritePool.releaseExcept(new Set<string>());
+          sPool.releaseExcept(new Set<string>());
           dPool.releaseExcept(visibleSet);
 
           const count = Math.min(visible.length, maxSprites * 2);
@@ -255,25 +253,42 @@ export default function TroutScene() {
             }
           }
         } else {
-          // Full sprite mode: release all dots
+          // Full sprite mode: release dots
           dPool.releaseExcept(new Set<string>());
+
+          // Shadow key prefix to distinguish from trout sprites
+          const shadowSet = new Set(visible.map((t) => "s_" + t.address));
           spritePool.releaseExcept(visibleSet);
+          sPool.releaseExcept(shadowSet);
 
           const count = Math.min(visible.length, maxSprites);
           for (let i = 0; i < count; i++) {
             const t = visible[i];
+
+            // Shadow sprite
+            const shadowKey = "s_" + t.address;
+            const shadow = sPool.acquire(shadowKey);
+            const s = t.scale || 1;
+            shadow.x = t.x + SHADOW_OFFSET_X * s;
+            shadow.y = t.y + SHADOW_OFFSET_Y * s;
+            shadow.scale.x = s;
+            shadow.scale.y = s;
+            const shadowTex = shadowTexturesRef.current.get(t.tier);
+            if (shadowTex && shadow.texture !== shadowTex) {
+              shadow.texture = shadowTex;
+            }
+
+            // Trout sprite
             const sprite = spritePool.acquire(t.address);
             sprite.x = t.x;
             sprite.y = t.y;
 
-            // Apply tier texture
             const tex = texturesRef.current.get(t.tier);
             if (tex && sprite.texture !== tex) {
               sprite.texture = tex;
             }
 
-            // Apply scale and direction
-            const s = t.scale || 1;
+            // Apply scale and direction (flip X for facing)
             sprite.scale.x = t.direction * s;
             sprite.scale.y = s;
 
@@ -285,6 +300,7 @@ export default function TroutScene() {
 
         spritePool.maybeShrink();
         dPool.maybeShrink();
+        sPool.maybeShrink();
         rafRef.current = requestAnimationFrame(loop);
       }
 
@@ -316,7 +332,7 @@ export default function TroutScene() {
       appRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps -- quality and selectedTrout are read via getState() inside the loop
-  }, [createPlaceholderTextures]);
+  }, [createTextures]);
 
   // ─── Input Handlers ──────────────────────────────────────
 
@@ -348,7 +364,7 @@ export default function TroutScene() {
     if (!cameraRef.current) return;
     const cam = cameraRef.current;
     const world = screenToWorld(cam, e.clientX, e.clientY);
-    zoomToward(cam, world.x, world.y, 500); // zoom in 2x at point
+    zoomToward(cam, world.x, world.y, 500);
   }, []);
 
   return (
