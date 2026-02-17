@@ -29,7 +29,9 @@
       "Bash(git status:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat\\(mvp\\): complete all UI, API, rendering, and security review\n\n- Build 7 overlay components \\(search, tooltip, wallet, stats, screenshot, zoom, naming\\)\n- Add leaderboard page with paginated table, search, and tier badges\n- Fix all 7 API routes with input validation, error handling, and edge safety\n- Add LOD dot rendering, double-click zoom, and fix PixiJS re-mount bug\n- Create useWallet and useViewport hooks with deep link support\n- Batch Redis pipelines to 300/chunk for Upstash compatibility\n- Fix critical signature encoding \\(base64 -> base58\\) found by review\n- Fix 15 additional issues: race conditions, memory leaks, type safety\n\nSession: docs/sessions/2026-02-12-2100-session.md\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(npm run dev:*)",
-      "Bash(git ls-tree:*)"
+      "Bash(git ls-tree:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
