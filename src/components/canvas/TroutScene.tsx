@@ -19,6 +19,7 @@ import {
   createShadowTextures,
   createDotTextures,
   createWaterTexture,
+  FRAME_COUNT,
 } from "@/lib/trout/pixel-sprites";
 
 // Shadow offset (top-down "depth" shadow)
@@ -42,7 +43,7 @@ export default function TroutScene() {
   const lastTimeRef = useRef(0);
 
   // Texture refs
-  const texturesRef = useRef<Map<TroutTier, PIXI.Texture>>(new Map());
+  const texturesRef = useRef<Map<TroutTier, PIXI.Texture[]>>(new Map());
   const dotTexturesRef = useRef<Map<TroutTier, PIXI.Texture>>(new Map());
   const shadowTexturesRef = useRef<Map<TroutTier, PIXI.Texture>>(new Map());
 
@@ -283,9 +284,13 @@ export default function TroutScene() {
             sprite.x = t.x;
             sprite.y = t.y;
 
-            const tex = texturesRef.current.get(t.tier);
-            if (tex && sprite.texture !== tex) {
-              sprite.texture = tex;
+            const frames = texturesRef.current.get(t.tier);
+            if (frames) {
+              const frameIdx = (t.animFrame ?? 0) % FRAME_COUNT;
+              const tex = frames[frameIdx];
+              if (tex && sprite.texture !== tex) {
+                sprite.texture = tex;
+              }
             }
 
             // Apply scale and direction (flip X for facing)

@@ -1,13 +1,21 @@
 /**
- * Trout sprite generator using the chatgpt_trout.png asset.
+ * Trout sprite generator using the chatgpt_trout_animation.png spritesheet.
  *
- * Loads the pixel-art trout image and creates per-tier textures
- * at different sizes. Falls back to a colored placeholder until
- * the image finishes loading.
+ * Loads a pre-processed 3x2 spritesheet (6 frames, each 512x295)
+ * with transparent background and creates per-tier animated texture
+ * arrays. Falls back to colored placeholders until the spritesheet loads.
  */
 
 import * as PIXI from "pixi.js";
 import type { TroutTier } from "@/types";
+
+// ─── Spritesheet layout (pre-processed clean version) ────────
+
+const SHEET_COLS = 3;
+const SHEET_ROWS = 2;
+const FRAME_W = 512;
+const FRAME_H = 295;
+export const FRAME_COUNT = SHEET_COLS * SHEET_ROWS; // 6
 
 // ─── Tier Sprite Sizes (width in pixels) ─────────────────────
 
@@ -20,8 +28,8 @@ const TIER_WIDTHS: Record<TroutTier, number> = {
   6: 90,
 };
 
-// Approximate aspect ratio of the trout image (wider than tall)
-const TROUT_ASPECT = 1.8;
+// Aspect ratio from the cropped frame (512 / 295)
+const TROUT_ASPECT = FRAME_W / FRAME_H;
 
 // ─── Exported Sprite Sizes ───────────────────────────────────
 
@@ -44,38 +52,66 @@ const DOT_COLORS: Record<TroutTier, number> = {
 // ─── Texture Generators ──────────────────────────────────────
 
 /**
- * Load the trout image and create per-tier textures.
- * Returns a map with placeholder textures immediately, then
- * replaces them with the real image once it loads.
+ * Load the trout spritesheet and create per-tier animated textures.
+ * Returns a map of tier → PIXI.Texture[] (6 frames each).
+ * Placeholder textures are provided immediately; real frames
+ * replace them once the spritesheet loads.
  */
 export function createTroutTextures(
   app: PIXI.Application
-): Map<TroutTier, PIXI.Texture> {
-  const textures = new Map<TroutTier, PIXI.Texture>();
+): Map<TroutTier, PIXI.Texture[]> {
+  const textures = new Map<TroutTier, PIXI.Texture[]>();
   const tiers: TroutTier[] = [1, 2, 3, 4, 5, 6];
 
-  // Provide placeholder textures so sprites render immediately
+  // Provide placeholder frames so sprites render immediately
   for (const tier of tiers) {
     const size = getSpriteSize(tier);
-    const g = new PIXI.Graphics();
-    g.rect(0, 0, size.w, size.h);
-    g.fill(DOT_COLORS[tier]);
-    textures.set(tier, app.renderer.generateTexture(g));
-    g.destroy();
+    const frames: PIXI.Texture[] = [];
+    for (let f = 0; f < FRAME_COUNT; f++) {
+      const g = new PIXI.Graphics();
+      g.rect(0, 0, size.w, size.h);
+      g.fill(DOT_COLORS[tier]);
+      frames.push(app.renderer.generateTexture(g));
+      g.destroy();
+    }
+    textures.set(tier, frames);
   }
 
-  // Load the real image and replace placeholders
-  PIXI.Assets.load<PIXI.Texture>("/chatgpt_trout.png").then((baseTex) => {
-    for (const tier of tiers) {
-      const size = getSpriteSize(tier);
-      const sprite = new PIXI.Sprite(baseTex);
-      sprite.width = size.w;
-      sprite.height = size.h;
-      const tex = app.renderer.generateTexture(sprite);
-      textures.set(tier, tex);
-      sprite.destroy();
+  // Load clean spritesheet and replace placeholders with real frames
+  PIXI.Assets.load<PIXI.Texture>("/chatgpt_trout_animation.png").then(
+    (sheetTex) => {
+      // Extract 6 frame textures from the spritesheet
+      const baseFrames: PIXI.Texture[] = [];
+      for (let row = 0; row < SHEET_ROWS; row++) {
+        for (let col = 0; col < SHEET_COLS; col++) {
+          baseFrames.push(
+            new PIXI.Texture({
+              source: sheetTex.source,
+              frame: new PIXI.Rectangle(
+                col * FRAME_W,
+                row * FRAME_H,
+                FRAME_W,
+                FRAME_H
+              ),
+            })
+          );
+        }
+      }
+
+      // Create scaled frames for each tier
+      for (const tier of tiers) {
+        const size = getSpriteSize(tier);
+        const tierFrames = textures.get(tier)!;
+        for (let f = 0; f < FRAME_COUNT; f++) {
+          const sprite = new PIXI.Sprite(baseFrames[f]);
+          sprite.width = size.w;
+          sprite.height = size.h;
+          tierFrames[f] = app.renderer.generateTexture(sprite);
+          sprite.destroy();
+        }
+      }
     }
-  });
+  );
 
   return textures;
 }
