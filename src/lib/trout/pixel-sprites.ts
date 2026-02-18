@@ -1,203 +1,52 @@
 /**
- * Procedural pixel-art trout sprite generator.
+ * Trout sprite generator using the chatgpt_trout.png asset.
  *
- * Draws chunky, grid-snapped trout sprites in the style of top-down
- * pixel art (similar to the chicken reference). Each "art pixel" is a
- * small square rendered via PIXI.Graphics.rect().
+ * Loads the pixel-art trout image and creates per-tier textures
+ * at different sizes. Falls back to a colored placeholder until
+ * the image finishes loading.
  */
 
 import * as PIXI from "pixi.js";
 import type { TroutTier } from "@/types";
 
-// ─── Color Palettes ──────────────────────────────────────────
+// ─── Tier Sprite Sizes (width in pixels) ─────────────────────
 
-interface Palette {
-  back: number;
-  body: number;
-  belly: number;
-  stripe: number;
-  outline: number;
-  eye: number;
-  tail: number;
-  fin: number;
-  spot: number;
-}
-
-const PALETTES: Record<TroutTier, Palette> = {
-  1: {
-    // Fry — pale silvery
-    outline: 0x4a6652,
-    back: 0x6b8e73,
-    body: 0x8aaa8e,
-    belly: 0xb5ccb8,
-    stripe: 0xcc9e9e,
-    eye: 0x1a1a1a,
-    tail: 0x6b8e73,
-    fin: 0x7a9a80,
-    spot: 0x4a6a4e,
-  },
-  2: {
-    // Fingerling — classic young trout
-    outline: 0x3d5c3e,
-    back: 0x5a7a5e,
-    body: 0x7a9a70,
-    belly: 0xa8c09c,
-    stripe: 0xd4938a,
-    eye: 0x1a1a1a,
-    tail: 0x6a8a5e,
-    fin: 0x7a9a6e,
-    spot: 0x3a5a36,
-  },
-  3: {
-    // Juvenile — richer colors
-    outline: 0x2e4a30,
-    back: 0x4a6a4a,
-    body: 0x6a8a60,
-    belly: 0xa0b894,
-    stripe: 0xd88878,
-    eye: 0x111111,
-    tail: 0x5a7a50,
-    fin: 0x6a8a5a,
-    spot: 0x2e4428,
-  },
-  4: {
-    // Adult — vivid
-    outline: 0x263e28,
-    back: 0x3e5e3e,
-    body: 0x5e7e54,
-    belly: 0x98b48c,
-    stripe: 0xe07060,
-    eye: 0x0a0a0a,
-    tail: 0x4e6e44,
-    fin: 0x5e7e4e,
-    spot: 0x243820,
-  },
-  5: {
-    // Trophy — golden undertones
-    outline: 0x2a3e1e,
-    back: 0x4a6636,
-    body: 0x6a8a4e,
-    belly: 0xb0c890,
-    stripe: 0xe8644e,
-    eye: 0x080808,
-    tail: 0x546e3a,
-    fin: 0x648a44,
-    spot: 0x1e3418,
-  },
-  6: {
-    // Leviathan — deep, legendary
-    outline: 0x1e3018,
-    back: 0x365830,
-    body: 0x547a42,
-    belly: 0xa8c484,
-    stripe: 0xf05840,
-    eye: 0x060606,
-    tail: 0x466834,
-    fin: 0x567e3c,
-    spot: 0x142810,
-  },
+const TIER_WIDTHS: Record<TroutTier, number> = {
+  1: 16,
+  2: 24,
+  3: 36,
+  4: 48,
+  5: 64,
+  6: 90,
 };
 
-// ─── Grid Definitions ────────────────────────────────────────
-// 0=transparent, 1=outline, 2=back, 3=body, 4=belly, 5=stripe,
-// 6=eye, 7=tail, 8=fin, 9=spot
-
-// SMALL: 9x5 — used for tiers 1-2
-const GRID_SMALL: number[][] = [
-  [0, 0, 7, 0, 1, 1, 1, 0, 0],
-  [0, 7, 1, 1, 2, 2, 1, 1, 0],
-  [7, 7, 1, 3, 5, 3, 3, 1, 6],
-  [0, 7, 1, 1, 4, 4, 1, 1, 0],
-  [0, 0, 7, 0, 1, 1, 1, 0, 0],
-];
-
-// MEDIUM: 16x9 — used for tiers 3-4
-const GRID_MEDIUM: number[][] = [
-  [0, 7, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 7, 7, 0, 1, 1, 1, 2, 1, 1, 0, 0, 0, 0, 0, 0],
-  [0, 0, 7, 1, 1, 2, 9, 2, 2, 1, 1, 1, 0, 0, 0, 0],
-  [0, 0, 0, 1, 2, 2, 2, 3, 9, 3, 2, 1, 1, 8, 0, 0],
-  [0, 0, 1, 1, 3, 5, 5, 5, 3, 3, 3, 3, 1, 1, 6, 0],
-  [0, 0, 0, 1, 4, 4, 4, 4, 4, 4, 3, 1, 1, 8, 0, 0],
-  [0, 0, 7, 1, 1, 4, 4, 4, 4, 1, 1, 1, 0, 0, 0, 0],
-  [0, 7, 7, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-  [0, 7, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-];
-
-// LARGE: 22x11 — used for tiers 5-6
-const GRID_LARGE: number[][] = [
-  [0, 7, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 7, 7, 0, 0, 1, 1, 1, 1, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 7, 7, 1, 1, 2, 2, 9, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 7, 1, 2, 2, 9, 2, 2, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 1, 2, 2, 2, 3, 9, 3, 3, 2, 2, 1, 1, 1, 8, 8, 0, 0, 0],
-  [0, 0, 0, 1, 1, 3, 5, 5, 5, 5, 5, 3, 3, 3, 3, 3, 1, 1, 1, 6, 6, 0],
-  [0, 0, 0, 0, 1, 4, 4, 4, 4, 4, 4, 4, 3, 3, 1, 1, 1, 8, 8, 0, 0, 0],
-  [0, 0, 0, 7, 1, 1, 4, 4, 4, 4, 4, 4, 3, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-  [0, 0, 7, 7, 1, 1, 1, 4, 4, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 7, 7, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 7, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-];
-
-// ─── Tier → Grid + Pixel-Size Mapping ────────────────────────
-
-interface SpriteConfig {
-  grid: number[][];
-  px: number;
-}
-
-const SPRITE_CONFIGS: Record<TroutTier, SpriteConfig> = {
-  1: { grid: GRID_SMALL, px: 1 },
-  2: { grid: GRID_SMALL, px: 2 },
-  3: { grid: GRID_MEDIUM, px: 2 },
-  4: { grid: GRID_MEDIUM, px: 3 },
-  5: { grid: GRID_LARGE, px: 3 },
-  6: { grid: GRID_LARGE, px: 5 },
-};
+// Approximate aspect ratio of the trout image (wider than tall)
+const TROUT_ASPECT = 1.8;
 
 // ─── Exported Sprite Sizes ───────────────────────────────────
 
 export function getSpriteSize(tier: TroutTier): { w: number; h: number } {
-  const cfg = SPRITE_CONFIGS[tier];
-  return {
-    w: cfg.grid[0].length * cfg.px,
-    h: cfg.grid.length * cfg.px,
-  };
+  const w = TIER_WIDTHS[tier];
+  return { w, h: Math.round(w / TROUT_ASPECT) };
 }
 
-// ─── Color Resolver ──────────────────────────────────────────
+// ─── Dot colors per tier (used for far-zoom LOD) ─────────────
 
-function resolveColor(cell: number, palette: Palette): number | null {
-  switch (cell) {
-    case 0:
-      return null; // transparent
-    case 1:
-      return palette.outline;
-    case 2:
-      return palette.back;
-    case 3:
-      return palette.body;
-    case 4:
-      return palette.belly;
-    case 5:
-      return palette.stripe;
-    case 6:
-      return palette.eye;
-    case 7:
-      return palette.tail;
-    case 8:
-      return palette.fin;
-    case 9:
-      return palette.spot;
-    default:
-      return null;
-  }
-}
+const DOT_COLORS: Record<TroutTier, number> = {
+  1: 0x8aaa8e,
+  2: 0x7a9a70,
+  3: 0x6a8a60,
+  4: 0x5e7e54,
+  5: 0x6a8a4e,
+  6: 0x547a42,
+};
 
 // ─── Texture Generators ──────────────────────────────────────
 
 /**
- * Generate pixel-art trout textures for all 6 tiers.
+ * Load the trout image and create per-tier textures.
+ * Returns a map with placeholder textures immediately, then
+ * replaces them with the real image once it loads.
  */
 export function createTroutTextures(
   app: PIXI.Application
@@ -205,24 +54,28 @@ export function createTroutTextures(
   const textures = new Map<TroutTier, PIXI.Texture>();
   const tiers: TroutTier[] = [1, 2, 3, 4, 5, 6];
 
+  // Provide placeholder textures so sprites render immediately
   for (const tier of tiers) {
-    const cfg = SPRITE_CONFIGS[tier];
-    const palette = PALETTES[tier];
+    const size = getSpriteSize(tier);
     const g = new PIXI.Graphics();
-
-    for (let r = 0; r < cfg.grid.length; r++) {
-      for (let c = 0; c < cfg.grid[r].length; c++) {
-        const color = resolveColor(cfg.grid[r][c], palette);
-        if (color !== null) {
-          g.rect(c * cfg.px, r * cfg.px, cfg.px, cfg.px);
-          g.fill(color);
-        }
-      }
-    }
-
+    g.rect(0, 0, size.w, size.h);
+    g.fill(DOT_COLORS[tier]);
     textures.set(tier, app.renderer.generateTexture(g));
     g.destroy();
   }
+
+  // Load the real image and replace placeholders
+  PIXI.Assets.load<PIXI.Texture>("/chatgpt_trout.png").then((baseTex) => {
+    for (const tier of tiers) {
+      const size = getSpriteSize(tier);
+      const sprite = new PIXI.Sprite(baseTex);
+      sprite.width = size.w;
+      sprite.height = size.h;
+      const tex = app.renderer.generateTexture(sprite);
+      textures.set(tier, tex);
+      sprite.destroy();
+    }
+  });
 
   return textures;
 }
@@ -271,7 +124,7 @@ export function createDotTextures(
     const s = dotSizes[tier];
     const g = new PIXI.Graphics();
     g.circle(s, s, s);
-    g.fill(PALETTES[tier].body);
+    g.fill(DOT_COLORS[tier]);
     textures.set(tier, app.renderer.generateTexture(g));
     g.destroy();
   }
